@@ -10,7 +10,10 @@ ollama_options = ollama.Options(
     num_predict=1_000,
 )
 
-model_name = "mistral:7b-instruct-v0.2-q6_K"
+# qwen:14b-chat-v1.5-q6_K
+# llama3:8b-instruct-q6_K
+# mistral:7b-instruct-v0.2-q6_K
+model_name = "llama3:8b-instruct-q6_K"
 
 # -- pqa_artificial -- 211k rows --
 # ref: https://huggingface.co/datasets/qiaojin/PubMedQA/viewer/pqa_artificial
@@ -31,7 +34,7 @@ with open(f"./jsonl/{dt_now}.jsonl", "a") as output_json_lines:
         )
         context = "\n".join(dataset["context"][i]["contexts"]).strip()
 
-        print("=" * 20, "Q", i + 1, "=" * 20, "\n")
+        print("=" * 20, "Q", str(i + 1).zfill(6), "=" * 20, "\n")
         print(context, "\n---\n")
         print(
             f"❓-- Question --",
