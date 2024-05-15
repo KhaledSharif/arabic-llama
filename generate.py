@@ -5,22 +5,25 @@ import ollama
 
 ollama_options = ollama.Options(
     seed=42,
-    temperature=0.0,
+    temperature=0.8,
     num_ctx=2_000,
     num_predict=1_000,
 )
 
 model_name = "mistral:7b-instruct-v0.2-q6_K"
 
+# -- pqa_artificial -- 211k rows --
+# ref: https://huggingface.co/datasets/qiaojin/PubMedQA/viewer/pqa_artificial
+dataset = load_dataset("qiaojin/PubMedQA", "pqa_artificial", split="all")
+
+# max number of rows to iterate over
 dataset_n = 1_000
 
-dataset_name = "qiaojin/PubMedQA"
-dataset = load_dataset(dataset_name, "pqa_unlabeled", split="all")
 dataset = dataset.shuffle().select(range(dataset_n))
 
 dt_now = datetime.now().strftime("%Y%m%d%H%M")
 
-with open(f"./results/{dt_now}.jsonl", "a") as output_json_lines:
+with open(f"./jsonl/{dt_now}.jsonl", "a") as output_json_lines:
     for i in range(dataset_n):
         question, answer = (
             dataset["question"][i].strip(),
