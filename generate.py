@@ -1,18 +1,13 @@
 from datasets import load_dataset
-import dspy
+import ollama
 
-lm_provider = dspy.OllamaLocal(
-    model="dolphin-mistral:7b-v2.8-q3_K_M",
-    max_tokens=1_000,
-    num_ctx=4_000,
-    temperature=0.8,
+ollama_options = ollama.Options(
+    num_predict=1_000,
+    seed=42,
+    temperature=0.0,
+    num_ctx=1_000,
 )
-
-dspy.settings.configure(lm=lm_provider)
-
-dspy_qa = dspy.ChainOfThought("question->answer")
-dspy_hint = dspy.ChainOfThought("question,hint->answer")
-
+model_name = "dolphin-mistral:7b-v2.8-q3_K_M"
 dataset_name = "medalpaca/medical_meadow_medical_flashcards"
 dataset = load_dataset(dataset_name, split="all")
 dataset = dataset.shuffle().select(range(10))
@@ -28,12 +23,28 @@ for i in range(10):
         f"Question {i+1}:", question, "Original Answer:", answer, sep="\n\n", end="\n\n"
     )
 
-    dspy_answer = dspy_qa(question=question).answer
     print("LLM w/out hint:")
-    print(dspy_answer, "\n")
+    stream = ollama.chat(
+        model=model_name,
+        messages=[{"role": "user", "content": f"{question}"}],
+        stream=True,
+        options=ollama_options,
+    )
 
-    dspy_answer_with_hint = dspy_hint(question=question, hint=answer).answer
+    for chunk in stream:
+        print(chunk["message"]["content"], end="", flush=True)
+
+    print("\n\n")
     print("LLM with hint:")
-    print(dspy_answer_with_hint, "\n")
+    stream = ollama.chat(
+        model=model_name,
+        messages=[{"role": "user", "content": f"{question} (hint: {answer}) answer:"}],
+        stream=True,
+        options=ollama_options,
+    )
+
+    for chunk in stream:
+        print(chunk["message"]["content"], end="", flush=True)
+    print("\n\n")
 
     print("=" * 40, "\n")
