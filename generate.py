@@ -13,11 +13,13 @@ ollama_options = ollama.Options(
 # qwen:14b-chat-v1.5-q6_K
 # llama3:8b-instruct-q6_K
 # mistral:7b-instruct-v0.2-q6_K
-model_name = "llama3:8b-instruct-q6_K"
+# stablelm2:12b-chat-q6_K
+model_name = "stablelm2:12b-chat-q6_K"
 
+# -- pqa_labeled    --   1k rows --
 # -- pqa_artificial -- 211k rows --
 # ref: https://huggingface.co/datasets/qiaojin/PubMedQA/viewer/pqa_artificial
-dataset = load_dataset("qiaojin/PubMedQA", "pqa_artificial", split="all")
+dataset = load_dataset("qiaojin/PubMedQA", "pqa_labeled", split="all")
 
 # max number of rows to iterate over
 dataset_n = 1_000
