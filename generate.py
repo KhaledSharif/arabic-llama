@@ -4,11 +4,11 @@ import ollama
 ollama_options = ollama.Options(
     num_predict=1_000,
     seed=42,
-    temperature=0.0,
-    num_ctx=1_000,
+    temperature=0.5,
+    num_ctx=2_000,
 )
 
-model_name = "dolphin-llama3:latest"
+model_name = "mistral:7b-instruct-v0.2-q6_K"
 
 dataset_name = "qiaojin/PubMedQA"
 dataset = load_dataset(dataset_name, "pqa_artificial", split="all")
@@ -21,7 +21,7 @@ for i in range(10):
     print("=" * 20, "Q", i + 1, "=" * 20, "\n")
     print(context, "\n---\n")
     print(
-        f"❓ Question:", question, "Original Answer:", answer, sep="\n\n", end="\n\n\n"
+        f"❓-- Question --", question, "📖 -- Original Answer --", answer, sep="\n\n", end="\n\n\n"
     )
 
     answer_without_hint = ""
@@ -29,11 +29,13 @@ for i in range(10):
 
     # ========================
 
-    print("🕯️ -- LLM w/out hint --")
+    prompt_no_hint = f"{context} Question: {question} Answer:"
+
+    print("🕯️ -- LLM Answer w/out hint --")
     stream = ollama.chat(
         model=model_name,
         messages=[
-            {"role": "user", "content": f"{context} Question: {question} Answer:"}
+            {"role": "user", "content": prompt_no_hint }
         ],
         stream=True,
         options=ollama_options,
@@ -50,7 +52,7 @@ for i in range(10):
 
     prompt_hint = f"{context} Question: {question} (Hint: {answer}) Answer:"
 
-    print("💡 -- LLM with hint --")
+    print("💡 -- LLM Answer with hint --")
     stream = ollama.chat(
         model=model_name,
         messages=[{"role": "user", "content": prompt_hint}],
@@ -83,4 +85,4 @@ for i in range(10):
 
     # ========================
 
-    print("=" * 40, "\n")
+    print("=" * 50, "\n")
