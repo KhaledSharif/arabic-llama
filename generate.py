@@ -7,44 +7,80 @@ ollama_options = ollama.Options(
     temperature=0.0,
     num_ctx=1_000,
 )
-model_name = "dolphin-mistral:7b-v2.8-q3_K_M"
-dataset_name = "medalpaca/medical_meadow_medical_flashcards"
-dataset = load_dataset(dataset_name, split="all")
+
+model_name = "dolphin-llama3:latest"
+
+dataset_name = "qiaojin/PubMedQA"
+dataset = load_dataset(dataset_name, "pqa_artificial", split="all")
 dataset = dataset.shuffle().select(range(10))
 
 for i in range(10):
-    question, answer = dataset["input"][i].strip(), dataset["output"][i].strip()
+    question, answer = dataset["question"][i].strip(), dataset["long_answer"][i].strip()
+    context = "\n".join(dataset["context"][i]["contexts"])
 
-    if len(question) < 10 or len(answer) < 10:
-        continue
-
-    print("=" * 40, "\n")
+    print("=" * 20, "Q", i + 1, "=" * 20, "\n")
+    print(context, "\n---\n")
     print(
-        f"Question {i+1}:", question, "Original Answer:", answer, sep="\n\n", end="\n\n"
+        f"❓ Question:", question, "Original Answer:", answer, sep="\n\n", end="\n\n\n"
     )
 
-    print("LLM w/out hint:")
+    answer_without_hint = ""
+    answer_with_hint = ""
+
+    # ========================
+
+    print("🕯️ -- LLM w/out hint --")
     stream = ollama.chat(
         model=model_name,
-        messages=[{"role": "user", "content": f"{question}"}],
+        messages=[
+            {"role": "user", "content": f"{context} Question: {question} Answer:"}
+        ],
+        stream=True,
+        options=ollama_options,
+    )
+
+    for chunk in stream:
+        c = chunk["message"]["content"]
+        answer_without_hint += c
+        print(c, end="", flush=True)
+
+    print("\n\n\n")
+
+    # ========================
+
+    prompt_hint = f"{context} Question: {question} (Hint: {answer}) Answer:"
+
+    print("💡 -- LLM with hint --")
+    stream = ollama.chat(
+        model=model_name,
+        messages=[{"role": "user", "content": prompt_hint}],
+        stream=True,
+        options=ollama_options,
+    )
+
+    for chunk in stream:
+        c = chunk["message"]["content"]
+        answer_with_hint += c
+        print(c, end="", flush=True)
+
+    print("\n")
+
+    stream = ollama.chat(
+        model=model_name,
+        messages=[
+            {"role": "user", "content": prompt_hint},
+            {"role": "assistant", "content": answer_with_hint},
+            {"role": "user", "content": "Explain Your Answer"},
+        ],
         stream=True,
         options=ollama_options,
     )
 
     for chunk in stream:
         print(chunk["message"]["content"], end="", flush=True)
-
+        
     print("\n\n")
-    print("LLM with hint:")
-    stream = ollama.chat(
-        model=model_name,
-        messages=[{"role": "user", "content": f"{question} (hint: {answer}) answer:"}],
-        stream=True,
-        options=ollama_options,
-    )
 
-    for chunk in stream:
-        print(chunk["message"]["content"], end="", flush=True)
-    print("\n\n")
+    # ========================
 
     print("=" * 40, "\n")
