@@ -1,7 +1,10 @@
 # corpo-llama
 
+![corporate llama](hero.jpeg)
 
-ORPO (Odds Ratio Preference Optimization) is a novel and innovative fine-tuning technique in machine learning that combines the standard supervised fine-tuning and preference alignment stages into a single procedure. This approach helps to save computational resources and time during training.
+ORPO (Odds Ratio Preference Optimization) is a novel and innovative fine-tuning technique in machine learning that combines the standard supervised fine-tuning and preference alignment stages into a single procedure. This repository helps users fine-tune Llama-3-8B models using various configurations.
+
+---
 
 An odds ratio (OR) is a statistic that quantifies the strength of an association between two events. It represents the odds of one event occurring given another exposure compared to the odds of the first event happening in the absence of the second exposure.
 
