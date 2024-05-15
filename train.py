@@ -31,7 +31,7 @@ else:
 
 # https://huggingface.co/meta-llama/Meta-Llama-3-8B
 base_model = "meta-llama/Meta-Llama-3-8B"
-new_model = "Science-Llama-3-8B"
+output_directory = ".model"
 
 # QLoRA config
 bnb_config = BitsAndBytesConfig(
@@ -124,4 +124,4 @@ trainer = ORPOTrainer(
     tokenizer=tokenizer,
 )
 trainer.train()
-trainer.save_model(new_model)
+trainer.save_model(output_directory)
