@@ -1,23 +1,22 @@
-import gc
 import os
-
+from glob import glob
 import torch
 import wandb
-from datasets import load_dataset
-
-from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training
+from datasets import Dataset
+import json
+from copy import deepcopy
+from peft import LoraConfig, prepare_model_for_kbit_training
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
-    pipeline,
 )
 from trl import ORPOConfig, ORPOTrainer, setup_chat_format
 
+BATCH_SIZE = 1_000
+
 # ref: https://huggingface.co/blog/mlabonne/orpo-llama-3
 
-# Use `wandb login --relogin` to force relogin
 wandb.login()
 
 if torch.cuda.get_device_capability()[0] >= 8:
@@ -29,7 +28,6 @@ else:
     attn_implementation = "eager"
     torch_dtype = torch.float16
 
-# https://huggingface.co/meta-llama/Meta-Llama-3-8B
 base_model = "meta-llama/Meta-Llama-3-8B"
 output_directory = ".model"
 
@@ -79,21 +77,63 @@ model = prepare_model_for_kbit_training(model)
 # https://huggingface.co/datasets/mlabonne/orpo-dpo-mix-40k
 #
 # --------------------------------------------------------------
-dataset_name = "mlabonne/orpo-dpo-mix-40k"
-dataset = load_dataset(dataset_name, split="all")
-dataset = dataset.shuffle(seed=42).select(range(1000))
+
+
+def read_jsonl(file_path) -> list[dict]:
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = [json.loads(line.strip()) for line in f]
+    return data
+
+
+data = []
+for data_file in glob("./jsonl/*.jsonl"):
+    data += read_jsonl(data_file)
+
+
+if len(data) < BATCH_SIZE:
+    print(len(data), "is too small :(")
+    exit()
+
+data_dict = {"chosen": [], "rejected": [], "prompt": []}
+
+for d in data:
+    prompt = str(d["context"] + " Question: " + d["question"])
+    new_prompt = {"content": prompt, "role": "user"}
+
+    data_dict["chosen"].append(
+        [
+            deepcopy(new_prompt),
+            {"content": d["answer_chosen"], "role": "assistant"},
+        ]
+    )
+
+    data_dict["rejected"].append(
+        [
+            deepcopy(new_prompt),
+            {"content": d["answer_rejected"], "role": "assistant"},
+        ]
+    )
+
+    data_dict["prompt"].append(prompt)
+
+
+dataset = Dataset.from_dict(data_dict)
+
+
+dataset = dataset.shuffle(seed=42).select(range(BATCH_SIZE))
+
 
 def format_chat_template(row):
     row["chosen"] = tokenizer.apply_chat_template(row["chosen"], tokenize=False)
     row["rejected"] = tokenizer.apply_chat_template(row["rejected"], tokenize=False)
     return row
 
+
 dataset = dataset.map(
     format_chat_template,
-    num_proc= os.cpu_count(),
+    num_proc=os.cpu_count(),
 )
 dataset = dataset.train_test_split(test_size=0.01)
-    
 
 
 orpo_args = ORPOConfig(

@@ -3,6 +3,8 @@ from datetime import datetime
 from json import dumps
 import ollama
 
+# ref: https://huggingface.co/datasets/qiaojin/PubMedQA/viewer/pqa_artificial
+
 ollama_options = ollama.Options(
     seed=42,
     temperature=0.8,
@@ -10,16 +12,16 @@ ollama_options = ollama.Options(
     num_predict=1_000,
 )
 
-# qwen:14b-chat-v1.5-q6_K
-# llama3:8b-instruct-q6_K
-# mistral:7b-instruct-v0.2-q6_K
-# stablelm2:12b-chat-q6_K
+# -- qwen:14b-chat-v1.5-q6_K
+# -- llama3:8b-instruct-q6_K
+# -- mistral:7b-instruct-v0.2-q6_K
+# -- stablelm2:12b-chat-q6_K
 model_name = "stablelm2:12b-chat-q6_K"
 
 # -- pqa_labeled    --   1k rows --
+# -- pqa_unlabeled  --  61k rows --
 # -- pqa_artificial -- 211k rows --
-# ref: https://huggingface.co/datasets/qiaojin/PubMedQA/viewer/pqa_artificial
-dataset = load_dataset("qiaojin/PubMedQA", "pqa_labeled", split="all")
+dataset = load_dataset("qiaojin/PubMedQA", "pqa_unlabeled", split="all")
 
 # max number of rows to iterate over
 dataset_n = 1_000
