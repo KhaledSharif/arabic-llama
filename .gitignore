@@ -5,7 +5,7 @@ __pycache__/
 .vscode
 # C extensions
 *.so
-
+.model
 jsonl/*.jsonl
 wandb
 # Distribution / packaging
