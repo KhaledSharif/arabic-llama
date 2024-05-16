@@ -13,15 +13,18 @@ ollama_options = ollama.Options(
 )
 
 # -- qwen:14b-chat-v1.5-q6_K
-# -- llama3:8b-instruct-q6_K
-# -- mistral:7b-instruct-v0.2-q6_K
 # -- stablelm2:12b-chat-q6_K
-model_name = "stablelm2:12b-chat-q6_K"
+# -- solar:10.7b-instruct-v1-q6_K
+# -- llama3:8b-instruct-q6_K
+# -- dolphin-llama3:8b-v2.9-q6_K
+# -- mistral:7b-instruct-v0.2-q6_K
+# -- openhermes:7b-mistral-v2.5-q6_K
+model_name = "solar:10.7b-instruct-v1-q6_K"
 
 # -- pqa_labeled    --   1k rows --
 # -- pqa_unlabeled  --  61k rows --
 # -- pqa_artificial -- 211k rows --
-dataset = load_dataset("qiaojin/PubMedQA", "pqa_unlabeled", split="all")
+dataset = load_dataset("qiaojin/PubMedQA", "pqa_artificial", split="all")
 
 # max number of rows to iterate over
 dataset_n = 1_000
